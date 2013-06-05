@@ -10,15 +10,13 @@ class UserController extends CController {
 		if (Yii::app()->request->isPostRequest) {
 			if (isset($_POST['LoginForm'])) {
 				$model->attributes = $_POST['LoginForm'];
-			}
-
-			if (isset($_POST['ajax'])) {
-				echo CActiveForm::validate($model);
-				Yii::app()->end();
-			}
-
-			if ($model->validate() && $model->login()) {
-				$this->redirect(Yii::app()->user->returnUrl);
+				if (isset($_POST['ajax'])) {
+					echo CActiveForm::validate($model);
+					Yii::app()->end();
+				}
+				if ($model->validate() && $model->login()) {
+					$this->redirect(Yii::app()->user->returnUrl);
+				}
 			}
 		}
 
@@ -112,7 +110,7 @@ class UserController extends CController {
 		
 	}
 
-	
+
 
 	public function filters() {
         return array(

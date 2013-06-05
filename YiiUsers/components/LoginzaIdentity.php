@@ -1,6 +1,6 @@
 <?php
 
-class LoginzaIdentity implements IUserIdentity {
+class LoginzaIdentity extends CUserIdentity {
 	public $widgetId = null;
 	public $apiSignature = null;
 	private $_id;

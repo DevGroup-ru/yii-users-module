@@ -3,36 +3,35 @@
 class AbstractIdentity extends CUserIdentity {
 	protected $_id;
 	private $_authenticatedWith = false;
+	public $vars;
 
-	public function authenticate($vars) {
+	public function authenticate() {
 		$module = Yii::app()->getModule("YiiUsers");
 
 		$enabledIdentities = $module->enabledIdentities;
 		$identities = array();
 
 		foreach ($enabledIdentities as $key=>$value) {
+			$className = "Dummy";
+
 			if (is_array($value)) {
-				$config = $value;
-				$config ['class'] = $key;
-				$identities [$key] = Yii::createComponent($config);
-				foreach ($vars as $variableKey =>$variableValue) {
-					if (property_exists($identity [$key], $variableKey)) {
-						$identities [$key]->$variableKey = $variableValue;
-					}
-				}
+				$className = $key;
 			} else {
-				$identities [$value] = Yii::createComponent($value);
-				foreach ($vars as $variableKey=>$variableValue) {
-					if (property_exists($identity [$value], $variableKey)) {
-						$identities [$value]->$variableKey = $variableValue;
-					}
+				$className = $value;
+			}
+			$class = new $className('', '');
+
+			foreach ($this->vars as $variableKey=>$variableValue) {
+				if (property_exists($class, $variableKey)) {
+					$class->$variableKey = $variableValue;
 				}
 			}
+			$identities[$className] = $class;
 		}
 
 		foreach ($identities as $identity) {
 			if ($identity->authenticate()) {
-				$this->_authenticatedWith = get_class($identity);
+				$this->_authenticatedWith = $identity;
 				$this->setId($identity->getId());
 				return true;
 			}
@@ -49,5 +48,9 @@ class AbstractIdentity extends CUserIdentity {
 
     public function setId($id) {
     	$this->_id = $id;
+    }
+
+    public function getAuthenticatedWith(){
+    	return $this->_authenticatedWith;
     }
 }

@@ -8,7 +8,6 @@ class UserProfile extends CActiveRecord {
 	 */
 	public function behaviors() {
 		return array(
-				'ActiveRecord',
 				'CTimestampBehavior' => array(
 					'class'=>'zii.behaviors.CTimestampBehavior',
 					'createAttribute'=>null,
@@ -31,7 +30,7 @@ class UserProfile extends CActiveRecord {
 	 */
 	public function tableName()
 	{
-		return '{{UserProfile}}';
+		return 'UserProfile';
 	}
 
 	public function attributeLabels() {

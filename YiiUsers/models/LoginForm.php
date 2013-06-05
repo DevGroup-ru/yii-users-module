@@ -12,7 +12,7 @@ class LoginForm extends CFormModel
 	public $password;
 	public $rememberMe;
 
-	private $_identity;
+
 
 	/**
 	 * Declares the validation rules.
@@ -44,21 +44,6 @@ class LoginForm extends CFormModel
 		);
 	}
 
-	/**
-	 * Authenticates the password.
-	 * This is the 'authenticate' validator as declared in rules().
-	 */
-	public function authenticate($attribute,$params)
-	{
-		$this->_identity=new StandardIdentity($this->username,$this->password);
-		if(!$this->_identity->authenticate()) {
-			$this->addError('password',Yii::t('YiiUsers', 'Bad username or password.'));
-			return false;
-		} else {
-			return true;
-		}
-
-	}
 
 	/**
 	 * Logs in the user using the given username and password in the model.
@@ -69,12 +54,14 @@ class LoginForm extends CFormModel
 
 		$module = Yii::app()->getModule("YiiUsers");
 		$vars = get_object_vars($this);
-		$abstractIdentity = new AbstractIdentity;
+		$abstractIdentity = new AbstractIdentity('','');
+		$abstractIdentity->vars = $vars;
+
 		if ($abstractIdentity->authenticate()) {
 			//! @todo Make configurable
 			$duration=$this->rememberMe ? 3600*24*30 : 3600*24*7; // 30 days
 			
-			Yii::app()->user->login($this->_identity,$duration);
+			Yii::app()->user->login($abstractIdentity->getAuthenticatedWith(),$duration);
 			
 			return true;
 		} else {

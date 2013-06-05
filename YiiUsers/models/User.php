@@ -7,10 +7,9 @@ class User extends CActiveRecord {
 	 */
 	public function behaviors() {
 		return array(
-				'ActiveRecord',
 				'CTimestampBehavior' => array(
 					'class'=>'zii.behaviors.CTimestampBehavior',
-					'createAttribute'=>'dateRegistered',
+					'createAttribute'=>'createTime',
 					'updateAttribute'=>null,
 				),
 			);
@@ -30,13 +29,13 @@ class User extends CActiveRecord {
 	 */
 	public function tableName()
 	{
-		return '{{User}}';
+		return 'User';
 	}
 
 	public function attributeLabels() {
 		return array(
 			'username' => Yii::t('YiiUsers', 'Username'),
-			'dateRegistered' => Yii::t('YiiUsers', 'Registration date'),
+			'createTime' => Yii::t('YiiUsers', 'Registration date'),
 			'active' => Yii::t('YiiUsers', 'Active'),
 
 			);
