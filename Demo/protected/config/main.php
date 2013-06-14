@@ -52,6 +52,7 @@ return array(
 		'bootstrap' => array(
 		    'class' => 'ext.YiiBooster.components.Bootstrap',
 		    'responsiveCss' => true,
+		    'fontAwesomeCss' => true,
 		),
 
 
