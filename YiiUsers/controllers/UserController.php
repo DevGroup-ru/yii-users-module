@@ -215,7 +215,10 @@ class UserController extends CController {
 
 	public function actionLogout() {
 		Yii::app()->user->logout();
-		$this->redirect(Yii::app()->user->returnUrl);
+		if (isset($_GET['returnUrl'])) 
+			$this->redirect($_GET['returnUrl']);
+		else
+			$this->redirect(Yii::app()->user->returnUrl);
 	}
 
 	public function actionProfileUpdate() {
@@ -249,7 +252,7 @@ class UserController extends CController {
 	public function filters() {
         return array(
                 array(
-                        'ESetReturnUrlFilter - login, logout, redirect, registration',
+                        'ESetReturnUrlFilter - login, logout, redirect, registration, js, checkLoggedIn',
                     ),
             );
     }

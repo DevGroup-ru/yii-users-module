@@ -12,7 +12,7 @@ return array(
 		'application.models.*',
 		'application.components.*',
 		'ext.set-return-url-filter.*', // required by YiiUsers module
-
+		'application.modules.YiiUsers.models.*',
 	),
 
 	'modules'=>array(
@@ -40,7 +40,7 @@ return array(
 	// application components
 	'components'=>array(
 		'user'=>array(
-			
+			'class' => 'application.modules.YiiUsers.components.SsoUser',
 			// enable cookie-based authentication
 			'allowAutoLogin'=>true,
 		),

@@ -22,6 +22,7 @@ return array(
 	),
 
 	'modules'=>array(
+		
 		// uncomment the following to enable the Gii tool
 		/*
 		'gii'=>array(
@@ -87,11 +88,11 @@ return array(
 					'levels'=>'error, warning',
 				),
 				// uncomment the following to show log messages on web pages
-				/*
+				
 				array(
 					'class'=>'CWebLogRoute',
 				),
-				*/
+				
 			),
 		),
 	),

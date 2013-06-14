@@ -11,7 +11,7 @@ $this->pageTitle=Yii::app()->name;
 	User attributes:
 	<pre>
 <?php
-		$user = Yii::app()->getModule("YiiUsers")->user;
+		$user = Yii::app()->user->user;
 		if ($user)
 		var_export($user->getAttributes());
 		?>

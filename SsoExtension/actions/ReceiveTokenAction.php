@@ -9,7 +9,7 @@ class ReceiveTokenAction extends CAction {
 			$time = time();
 			$hash = md5(Yii::app()->authManager->privateHash.":".$time);
 			$publicHash = Yii::app()->authManager->publicHash;
-
+			Yii::trace("Getting User by Token");
 			$userInfo = $this->getClient()->getUserByToken($_GET['token'], $hash, $publicHash, $time);
 
 			if (is_array($userInfo)) {

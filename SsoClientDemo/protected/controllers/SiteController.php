@@ -5,6 +5,7 @@ class SiteController extends Controller
 	public function actions() {
 		return array(
             'ReceiveToken'=>'ext.SsoExtension.actions.ReceiveTokenAction',
+            'Logout'=>'ext.SsoExtension.actions.LogoutAction',
         );
 	}
 	/**

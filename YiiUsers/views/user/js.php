@@ -19,8 +19,10 @@ YiiUsers.checkLoggedIn = function (){
 }
 
 YiiUsers.checkLoggedInCallback = function(data) {
-	console.log("checkLoggedInCallback:");
-	console.log(data);
+	if (data.logged) {
+		var returnUrl = document.location.href;
+		document.location = '/site/ReceiveToken?token='+data.token+'&returnUrl=' + returnUrl;
+	}
 }
 
 ;

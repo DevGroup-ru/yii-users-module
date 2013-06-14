@@ -16,7 +16,7 @@ class SsoUser extends CWebUser {
 				$time = time();
 				$hash = md5(Yii::app()->authManager->privateHash.":".$time);
 				$publicHash = Yii::app()->authManager->publicHash;
-
+				Yii::trace("Getting User by ID");
 				$userInfo = $this->getClient()->getUserById($this->id, $hash, $publicHash, $time);
 
 				if (!is_array($userInfo)) {
@@ -28,6 +28,8 @@ class SsoUser extends CWebUser {
 
 			$this->_user = $userInfo['user'];
 			$this->_profile = $userInfo['profile'];
+		} else {
+			Yii::trace("Getting User from Cache");
 		}
 		return $this->_user;
 	}
