@@ -26,7 +26,11 @@ class AsmSelect extends CWidget
 	{
 	   	$auth         = Yii::app()->authManager;
 		$RoleName     = ''; // string(rolename)
-		$arrTypeMap   = array("0"=>Yii::t('User', 'Operation'), "1"=>Yii::t('User', 'Task'), "2"=>Yii::t('User', 'Role'));   
+		$arrTypeMap   = array(
+			"0"=>Yii::t('YiiUsers', 'Operation'), 
+			"1"=>Yii::t('YiiUsers', 'Task'), 
+			"2"=>Yii::t('YiiUsers', 'Role')
+		);   
 		$arrOptGroups = array();
 		$arrSelected  = array();
 		
@@ -58,22 +62,18 @@ class AsmSelect extends CWidget
 					array_push($arrSelected, $child);
 			}
 		}
-		/*echo "<PRE>";
-		print_r($arrSelected);
-		print_r($childs);
-		echo "</PRE>";*/
-		//*/
-		
+
 		// and now we hand the obtained informations to a asmselectex instance
 		$this->widget('ext.asmselectex.EasmSelectEx',array(
 				'name'=>'assignmentList',
 				'values'=>$arrOptGroups,
 				'selected'=>$arrSelected,
-				'attributes'=>array('title'=>Yii::t('User', 'Choose rights for assign.')),
+				'attributes'=>array('title'=>Yii::t('YiiUsers', 'Choose rights to assign')),
 				'scriptOptions'=>"addItemTarget: 'bottom', animate: true, highlight: true,
-						sortable: false, removeLabel: '".Yii::t('User', 'Remove')."', highlightAddedLabel: '" . Yii::t('User', 'Added')
+						sortable: false, removeLabel: '".Yii::t('YiiUsers', 'Remove').
+						"', highlightAddedLabel: '" . Yii::t('YiiUsers', 'Added').
 						": ', 
-						highlightRemovedLabel: '".Yii::t('User', 'Removed').": '"
+						highlightRemovedLabel: '".Yii::t('YiiUsers', 'Removed').": '"
 		));
 		
 	}

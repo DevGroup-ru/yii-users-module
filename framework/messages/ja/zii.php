@@ -15,8 +15,6 @@
  * of the guide for details.
  *
  * NOTE, this file must be saved in UTF-8 encoding.
- *
- * @version $Id: $
  */
 return array (
   'Are you sure you want to delete this item?' => 'この項目を削除してもよろしいですか?',
@@ -34,8 +32,10 @@ return array (
   'The button type "{type}" is not supported.' => 'ボタンタイプ"{type}"はサポートされていません。',
   'The column must be specified in the format of "Name:Type:Label", where "Type" and "Label" are optional.' => 'カラムは"Name:Type:Label"という形式で指定しなければいけません。"Type"と"Label"は省略可能です。',
   'The property "itemView" cannot be empty.' => '"itemView"プロパティは空ではいけません。',
+  'The property filterSelector should be defined.' => 'filterSelector プロパティを指定しなければいけません。',
+  'The property updateSelector should be defined.' => 'updateSelector プロパティを指定しなければいけません。',
   'Total 1 result.|Total {count} results.' => '合計{count}個',
   'Update' => '更新',
   'View' => '表示',
-  '{class} must specify "model" and "attribute" or "name" property values.' => '{class}は"model"と"attribute"または"name"プロパティ値を指定しなければいけません。',
+  '{class} must specify "model" and "{attribute}" or "{name}" property values.' => '{class}は"model"と"{attribute}"または"{name}"のプロパティ値を指定しなければいけません。',
 );

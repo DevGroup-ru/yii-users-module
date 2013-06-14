@@ -10,3 +10,4 @@ Requirements
 - Yii Framework v 1.1.x
 - ESetReturnUrlFilter extension
 - YiiBooster extension
+- asmselectex extension

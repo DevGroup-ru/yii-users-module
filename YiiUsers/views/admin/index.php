@@ -12,23 +12,19 @@ $this->widget('bootstrap.widgets.TbButtonGroup', array(
 ?>
 
 <?php
-$this->widget('bootstrap.widgets.TbJsonGridView', array(
+$this->widget('bootstrap.widgets.TbExtendedGridView', array(
 	'dataProvider' => $model->search(),
 	'filter' => $model,
 	'type' => 'striped bordered condensed',
-	'summaryText' => false,
-	'cacheTTL' => 10, // cache will be stored 10 seconds (see cacheTTLType)
-	'cacheTTLType' => 's', // type can be of seconds, minutes or hours
+	'responsiveTable' => true,
+	'headerOffset' => 40, // 40px is the height of the main navigation at bootstrap
 	'columns' => array(
 		'id',
 		'username',
+		'createTime',
 		array(
-			'name' => 'createTime',
-			//'type' => 'datetime'
-		),
-		array(
-			'header' => Yii::t('ses', 'Edit'),
-			'class' => 'bootstrap.widgets.TbJsonButtonColumn',
+			'header' => Yii::t('YiiUsers', 'Edit'),
+			'class' => 'bootstrap.widgets.TbButtonColumn',
 			'template' => '{view} {delete}',
 		),
 	),

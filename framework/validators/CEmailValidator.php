@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright Copyright &copy; 2008-2011 Yii Software LLC
+ * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -12,7 +12,6 @@
  * CEmailValidator validates that the attribute value is a valid email address.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.validators
  * @since 1.0
  */
@@ -38,12 +37,14 @@ class CEmailValidator extends CValidator
 	 * @var boolean whether to check the MX record for the email address.
 	 * Defaults to false. To enable it, you need to make sure the PHP function 'checkdnsrr'
 	 * exists in your PHP installation.
+	 * Please note that this check may fail due to temporary problems even if email is deliverable.
 	 */
 	public $checkMX=false;
 	/**
 	 * @var boolean whether to check port 25 for the email address.
 	 * Defaults to false. To enable it, ensure that the PHP functions 'dns_get_record' and
 	 * 'fsockopen' are available in your PHP installation.
+	 * Please note that this check may fail due to temporary problems even if email is deliverable.
 	 */
 	public $checkPort=false;
 	/**
@@ -51,6 +52,12 @@ class CEmailValidator extends CValidator
 	 * meaning that if the attribute is empty, it is considered valid.
 	 */
 	public $allowEmpty=true;
+	/**
+	 * @var boolean whether validation process should care about IDN (internationalized domain names). Default
+	 * value is false which means that validation of emails containing IDN will always fail.
+	 * @since 1.1.13
+	 */
+	public $validateIDN=false;
 
 	/**
 	 * Validates the attribute of the object.
@@ -80,6 +87,8 @@ class CEmailValidator extends CValidator
 	 */
 	public function validateValue($value)
 	{
+		if(is_string($value) && $this->validateIDN)
+			$value=$this->encodeIDN($value);
 		// make sure string length is limited to avoid DOS attacks
 		$valid=is_string($value) && strlen($value)<=254 && (preg_match($this->pattern,$value) || $this->allowName && preg_match($this->fullPattern,$value));
 		if($valid)
@@ -101,6 +110,19 @@ class CEmailValidator extends CValidator
 	 */
 	public function clientValidateAttribute($object,$attribute)
 	{
+		if($this->validateIDN)
+		{
+			Yii::app()->getClientScript()->registerCoreScript('punycode');
+			// punycode.js works only with the domains - so we have to extract it before punycoding
+			$validateIDN='
+var info = value.match(/^(.[^@]+)@(.+)$/);
+if (info)
+	value = info[1] + "@" + punycode.toASCII(info[2]);
+';
+		}
+		else
+			$validateIDN='';
+
 		$message=$this->message!==null ? $this->message : Yii::t('yii','{attribute} is not a valid email address.');
 		$message=strtr($message, array(
 			'{attribute}'=>$object->getAttributeLabel($attribute),
@@ -111,12 +133,13 @@ class CEmailValidator extends CValidator
 			$condition.=" && !value.match({$this->fullPattern})";
 
 		return "
-if(".($this->allowEmpty ? "$.trim(value)!='' && " : '').$condition.") {
+$validateIDN
+if(".($this->allowEmpty ? "jQuery.trim(value)!='' && " : '').$condition.") {
 	messages.push(".CJSON::encode($message).");
 }
 ";
 	}
-	
+
 	/**
 	 * Retrieves the list of MX records for $domain and checks if port 25
 	 * is opened on any of these.
@@ -132,7 +155,7 @@ if(".($this->allowEmpty ? "$.trim(value)!='' && " : '').$condition.") {
 		usort($records,array($this,'mxSort'));
 		foreach($records as $record)
 		{
-			$handle=fsockopen($record['target'],25);
+			$handle=@fsockopen($record['target'],25);
 			if($handle!==false)
 			{
 				fclose($handle);
@@ -141,7 +164,7 @@ if(".($this->allowEmpty ? "$.trim(value)!='' && " : '').$condition.") {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * Determines if one MX record has higher priority as another
 	 * (i.e. 'pri' is lower). Used by {@link checkMxPorts}.
@@ -155,5 +178,18 @@ if(".($this->allowEmpty ? "$.trim(value)!='' && " : '').$condition.") {
 		if($a['pri']==$b['pri'])
 			return 0;
 		return ($a['pri']<$b['pri'])?-1:1;
+	}
+
+	/**
+	 * Converts given IDN to the punycode.
+	 * @param string $value IDN to be converted.
+	 * @return string resulting punycode.
+	 * @since 1.1.13
+	 */
+	private function encodeIDN($value)
+	{
+		require_once(Yii::getPathOfAlias('system.vendors.Net_IDNA2.Net').DIRECTORY_SEPARATOR.'IDNA2.php');
+		$idna=new Net_IDNA2();
+		return $idna->encode($value);
 	}
 }

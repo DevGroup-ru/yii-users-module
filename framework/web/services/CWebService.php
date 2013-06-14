@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright Copyright &copy; 2008-2011 Yii Software LLC
+ * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -24,7 +24,6 @@
  * @property string $methodName The currently requested method name. Empty if no method is being requested.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.web.services
  * @since 1.0
  */
@@ -62,7 +61,7 @@ class CWebService extends CComponent
 	 * @var array a list of classes that are declared as complex types in WSDL.
 	 * This should be an array with WSDL types as keys and names of PHP classes as values.
 	 * A PHP class can also be specified as a path alias.
-	 * @see http://www.php.net/manual/en/function.soap-soapserver-construct.php
+	 * @see http://www.php.net/manual/en/soapserver.soapserver.php
 	 */
 	public $classMap=array();
 	/**
@@ -75,7 +74,7 @@ class CWebService extends CComponent
 	public $soapVersion;
 	/**
 	 * @var integer the persistence mode of the SOAP server.
-	 * @see http://www.php.net/manual/en/function.soap-soapserver-setpersistence.php
+	 * @see http://www.php.net/manual/en/soapserver.setpersistence.php
 	 */
 	public $persistence;
 	/**
@@ -231,14 +230,14 @@ class CWebService extends CComponent
 
 	/**
 	 * @return array options for creating SoapServer instance
-	 * @see http://www.php.net/manual/en/function.soap-soapserver-construct.php
+	 * @see http://www.php.net/manual/en/soapserver.soapserver.php
 	 */
 	protected function getOptions()
 	{
 		$options=array();
 		if($this->soapVersion==='1.1')
 			$options['soap_version']=SOAP_1_1;
-		else if($this->soapVersion==='1.2')
+		elseif($this->soapVersion==='1.2')
 			$options['soap_version']=SOAP_1_2;
 		if($this->actor!==null)
 			$options['actor']=$this->actor;
@@ -259,7 +258,6 @@ class CWebService extends CComponent
  * CSoapObjectWrapper is a wrapper class internally used when SoapServer::setObject() is not defined.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.web.services
  */
 class CSoapObjectWrapper

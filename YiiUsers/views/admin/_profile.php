@@ -1,6 +1,6 @@
 <?php /** @var BootActiveForm $form */
 	$form = $this->beginWidget('bootstrap.widgets.TbActiveForm', array(
-		'id'=>'Form-User',
+		'id'=>'Form-UserProfile',
 		'type'=>'horizontal',
 	)); ?>
  

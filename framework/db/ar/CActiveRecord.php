@@ -4,7 +4,7 @@
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
  * @link http://www.yiiframework.com/
- * @copyright Copyright &copy; 2008-2011 Yii Software LLC
+ * @copyright 2008-2013 Yii Software LLC
  * @license http://www.yiiframework.com/license/
  */
 
@@ -34,7 +34,6 @@
  * @property string $tableAlias The default table alias.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -54,8 +53,8 @@ abstract class CActiveRecord extends CModel
 	public static $db;
 
 	private static $_models=array();			// class name => model
+	private static $_md=array();				// class name => meta data
 
-	private $_md;								// meta data
 	private $_new=false;						// whether this instance is new or not
 	private $_attributes=array();				// attribute name => attribute value
 	private $_related=array();					// attribute name => related objects
@@ -63,19 +62,12 @@ abstract class CActiveRecord extends CModel
 	private $_pk;								// old primary key value
 	private $_alias='t';						// the table alias being used for query
 
-	public function __destruct() {
-		foreach (array_keys($this->_related) as $key) {
-			$this->_related[$key] = null;
-			unset($this->_related[$key]);
-		}
-		$this->_c = null;
 
-		$this->_related = null;
-		parent::__destruct();
-	}
 	/**
 	 * Constructor.
 	 * @param string $scenario scenario name. See {@link CModel::scenario} for more details about this parameter.
+	 * Note: in order to setup initial model parameters use {@link init()} or {@link afterConstruct()}.
+	 * Do NOT override the constructor unless it is absolutely necessary!
 	 */
 	public function __construct($scenario='insert')
 	{
@@ -109,7 +101,8 @@ abstract class CActiveRecord extends CModel
 	 * It changes the query caching parameter of the {@link dbConnection} instance.
 	 * @param integer $duration the number of seconds that query results may remain valid in cache.
 	 * If this is 0, the caching will be disabled.
-	 * @param CCacheDependency $dependency the dependency that will be used when saving the query results into cache.
+	 * @param CCacheDependency|ICacheDependency $dependency the dependency that will be used when saving
+	 * the query results into cache.
 	 * @param integer $queryCount number of SQL queries that need to be cached after calling this method. Defaults to 1,
 	 * meaning that the next SQL query will be cached.
 	 * @return CActiveRecord the active record instance itself.
@@ -128,7 +121,6 @@ abstract class CActiveRecord extends CModel
 	 */
 	public function __sleep()
 	{
-		$this->_md=null;
 		return array_keys((array)$this);
 	}
 
@@ -143,11 +135,11 @@ abstract class CActiveRecord extends CModel
 	{
 		if(isset($this->_attributes[$name]))
 			return $this->_attributes[$name];
-		else if(isset($this->getMetaData()->columns[$name]))
+		elseif(isset($this->getMetaData()->columns[$name]))
 			return null;
-		else if(isset($this->_related[$name]))
+		elseif(isset($this->_related[$name]))
 			return $this->_related[$name];
-		else if(isset($this->getMetaData()->relations[$name]))
+		elseif(isset($this->getMetaData()->relations[$name]))
 			return $this->getRelated($name);
 		else
 			return parent::__get($name);
@@ -181,11 +173,11 @@ abstract class CActiveRecord extends CModel
 	{
 		if(isset($this->_attributes[$name]))
 			return true;
-		else if(isset($this->getMetaData()->columns[$name]))
+		elseif(isset($this->getMetaData()->columns[$name]))
 			return false;
-		else if(isset($this->_related[$name]))
+		elseif(isset($this->_related[$name]))
 			return true;
-		else if(isset($this->getMetaData()->relations[$name]))
+		elseif(isset($this->getMetaData()->relations[$name]))
 			return $this->getRelated($name)!==null;
 		else
 			return parent::__isset($name);
@@ -201,7 +193,7 @@ abstract class CActiveRecord extends CModel
 	{
 		if(isset($this->getMetaData()->columns[$name]))
 			unset($this->_attributes[$name]);
-		else if(isset($this->getMetaData()->relations[$name]))
+		elseif(isset($this->getMetaData()->relations[$name]))
 			unset($this->_related[$name]);
 		else
 			parent::__unset($name);
@@ -244,7 +236,14 @@ abstract class CActiveRecord extends CModel
 	 * or an empty array.
 	 * @param string $name the relation name (see {@link relations})
 	 * @param boolean $refresh whether to reload the related objects from database. Defaults to false.
+	 * If the current record is not a new record and it does not have the related objects loaded they
+	 * will be retrieved from the database even if this is set to false.
+	 * If the current record is a new record and this value is false, the related objects will not be
+	 * retrieved from the database.
 	 * @param mixed $params array or CDbCriteria object with additional parameters that customize the query conditions as specified in the relation declaration.
+	 * If this is supplied the related record(s) will be retrieved from the database regardless of the value or {@link $refresh}.
+	 * The related record(s) retrieved when this is supplied will only be returned by this method and will not be loaded into the current record's relation.
+	 * The value of the relation prior to running this method will still be available for the current record if this is supplied.
 	 * @return mixed the related object(s).
 	 * @throws CDbException if the relation is not specified in {@link relations}.
 	 */
@@ -278,16 +277,14 @@ abstract class CActiveRecord extends CModel
 			$r=$name;
 		unset($this->_related[$name]);
 
-		$finder=new CActiveFinder($this,$r);
+		$finder=$this->getActiveFinder($r);
 		$finder->lazyFind($this);
-		$finder = null;
-		unset($finder);
 
 		if(!isset($this->_related[$name]))
 		{
 			if($relation instanceof CHasManyRelation)
 				$this->_related[$name]=array();
-			else if($relation instanceof CStatRelation)
+			elseif($relation instanceof CStatRelation)
 				$this->_related[$name]=$relation->defaultValue;
 			else
 				$this->_related[$name]=null;
@@ -396,7 +393,6 @@ abstract class CActiveRecord extends CModel
 		else
 		{
 			$model=self::$_models[$className]=new $className(null);
-			$model->_md=new CActiveRecordMetaData($model);
 			$model->attachBehaviors($model->behaviors());
 			return $model;
 		}
@@ -408,10 +404,13 @@ abstract class CActiveRecord extends CModel
 	 */
 	public function getMetaData()
 	{
-		if($this->_md!==null)
-			return $this->_md;
-		else
-			return $this->_md=self::model(get_class($this))->_md;
+		$className=get_class($this);
+		if(!array_key_exists($className,self::$_md))
+		{
+			self::$_md[$className]=null; // preventing recursive invokes of {@link getMetaData()} via {@link __get()}
+			self::$_md[$className]=new CActiveRecordMetaData($this);
+		}
+		return self::$_md[$className];
 	}
 
 	/**
@@ -423,10 +422,9 @@ abstract class CActiveRecord extends CModel
 	 */
 	public function refreshMetaData()
 	{
-		$finder=self::model(get_class($this));
-		$finder->_md=new CActiveRecordMetaData($finder);
-		if($this!==$finder)
-			$this->_md=$finder->_md;
+		$className=get_class($this);
+		if(array_key_exists($className,self::$_md))
+			unset(self::$_md[$className]);
 	}
 
 	/**
@@ -601,7 +599,7 @@ abstract class CActiveRecord extends CModel
 		$labels=$this->attributeLabels();
 		if(isset($labels[$attribute]))
 			return $labels[$attribute];
-		else if(strpos($attribute,'.')!==false)
+		elseif(strpos($attribute,'.')!==false)
 		{
 			$segs=explode('.',$attribute);
 			$name=array_pop($segs);
@@ -624,6 +622,7 @@ abstract class CActiveRecord extends CModel
 	 * Returns the database connection used by active record.
 	 * By default, the "db" application component is used as the database connection.
 	 * You may override this method if you want to use a different database connection.
+	 * @throws CDbException if "db" application component is not defined
 	 * @return CDbConnection the database connection used by active record.
 	 */
 	public function getDbConnection()
@@ -693,7 +692,7 @@ abstract class CActiveRecord extends CModel
 	{
 		if(property_exists($this,$name))
 			return $this->$name;
-		else if(isset($this->_attributes[$name]))
+		elseif(isset($this->_attributes[$name]))
 			return $this->_attributes[$name];
 	}
 
@@ -709,7 +708,7 @@ abstract class CActiveRecord extends CModel
 	{
 		if(property_exists($this,$name))
 			$this->$name=$value;
-		else if(isset($this->getMetaData()->columns[$name]))
+		elseif(isset($this->getMetaData()->columns[$name]))
 			$this->_attributes[$name]=$value;
 		else
 			return false;
@@ -739,7 +738,7 @@ abstract class CActiveRecord extends CModel
 					$this->_related[$name][$index]=$record;
 			}
 		}
-		else if(!isset($this->_related[$name]))
+		elseif(!isset($this->_related[$name]))
 			$this->_related[$name]=$record;
 	}
 
@@ -759,7 +758,7 @@ abstract class CActiveRecord extends CModel
 		{
 			if(property_exists($this,$name))
 				$attributes[$name]=$this->$name;
-			else if($names===true && !isset($attributes[$name]))
+			elseif($names===true && !isset($attributes[$name]))
 				$attributes[$name]=null;
 		}
 		if(is_array($names))
@@ -871,10 +870,15 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * This event is raised before an AR finder performs a find call.
-	 * In this event, the {@link CModelEvent::criteria} property contains the query criteria
-	 * passed as parameters to those find methods. If you want to access
-	 * the query criteria specified in scopes, please use {@link getDbCriteria()}.
-	 * You can modify either criteria to customize them based on needs.
+	 * This can be either a call to CActiveRecords find methods or a find call
+	 * when model is loaded in relational context via lazy or eager loading.
+	 * If you want to access or modify the query criteria used for the
+	 * find call, you can use {@link getDbCriteria()} to customize it based on your needs.
+	 * When modifying criteria in beforeFind you have to make sure you are using the right
+	 * table alias which is different on normal find and relational call.
+	 * You can use {@link getTableAlias()} to get the alias used for the upcoming find call.
+	 * Please note that modification of criteria is fully supported as of version 1.1.13.
+	 * Earlier versions had some problems with relational context and applying changes correctly.
 	 * @param CModelEvent $event the event parameter
 	 * @see beforeFind
 	 */
@@ -890,6 +894,35 @@ abstract class CActiveRecord extends CModel
 	public function onAfterFind($event)
 	{
 		$this->raiseEvent('onAfterFind',$event);
+	}
+
+	/**
+	 * Given 'with' options returns a new active finder instance.
+	 *
+	 * @param mixed $with the relation names to be actively looked for
+	 * @return CActiveFinder active finder for the operation
+	 *
+	 * @since 1.1.14
+	 */
+	public function getActiveFinder($with)
+	{
+		return new CActiveFinder($this,$with);
+	}
+
+	/**
+	 * This event is raised before an AR finder performs a count call.
+	 * If you want to access or modify the query criteria used for the
+	 * count call, you can use {@link getDbCriteria()} to customize it based on your needs.
+	 * When modifying criteria in beforeCount you have to make sure you are using the right
+	 * table alias which is different on normal count and relational call.
+	 * You can use {@link getTableAlias()} to get the alias used for the upcoming count call.
+	 * @param CModelEvent $event the event parameter
+	 * @see beforeCount
+	 * @since 1.1.14
+	 */
+	public function onBeforeCount($event)
+	{
+		$this->raiseEvent('onBeforeCount',$event);
 	}
 
 	/**
@@ -959,10 +992,12 @@ abstract class CActiveRecord extends CModel
 	/**
 	 * This method is invoked before an AR finder executes a find call.
 	 * The find calls include {@link find}, {@link findAll}, {@link findByPk},
-	 * {@link findAllByPk}, {@link findByAttributes} and {@link findAllByAttributes}.
+	 * {@link findAllByPk}, {@link findByAttributes}, {@link findAllByAttributes},
+	 * {@link findBySql} and {@link findAllBySql}.
 	 * The default implementation raises the {@link onBeforeFind} event.
 	 * If you override this method, make sure you call the parent implementation
 	 * so that the event is raised properly.
+	 * For details on modifying query criteria see {@link onBeforeFind} event.
 	 */
 	protected function beforeFind()
 	{
@@ -971,6 +1006,20 @@ abstract class CActiveRecord extends CModel
 			$event=new CModelEvent($this);
 			$this->onBeforeFind($event);
 		}
+	}
+
+	/**
+	 * This method is invoked before an AR finder executes a count call.
+	 * The count calls include {@link count} and {@link countByAttributes}
+	 * The default implementation raises the {@link onBeforeCount} event.
+	 * If you override this method, make sure you call the parent implementation
+	 * so that the event is raised properly.
+	 * @since 1.1.14
+	 */
+	protected function beforeCount()
+	{
+		if($this->hasEventHandler('onBeforeCount'))
+			$this->onBeforeCount(new CEvent($this));
 	}
 
 	/**
@@ -1013,7 +1062,7 @@ abstract class CActiveRecord extends CModel
 	 * @param array $attributes list of attributes that need to be saved. Defaults to null,
 	 * meaning all attributes that are loaded from DB will be saved.
 	 * @return boolean whether the attributes are valid and the record is inserted successfully.
-	 * @throws CException if the record is not new
+	 * @throws CDbException if the record is not new
 	 */
 	public function insert($attributes=null)
 	{
@@ -1027,14 +1076,12 @@ abstract class CActiveRecord extends CModel
 			$command=$builder->createInsertCommand($table,$this->getAttributes($attributes));
 			if($command->execute())
 			{
-				$command = null;
-				unset($command);
 				$primaryKey=$table->primaryKey;
 				if($table->sequenceName!==null)
 				{
 					if(is_string($primaryKey) && $this->$primaryKey===null)
 						$this->$primaryKey=$builder->getLastInsertID($table);
-					else if(is_array($primaryKey))
+					elseif(is_array($primaryKey))
 					{
 						foreach($primaryKey as $pk)
 						{
@@ -1046,8 +1093,6 @@ abstract class CActiveRecord extends CModel
 						}
 					}
 				}
-				$builder = null;
-				$table = null;
 				$this->_pk=$this->getPrimaryKey();
 				$this->afterSave();
 				$this->setIsNewRecord(false);
@@ -1065,7 +1110,7 @@ abstract class CActiveRecord extends CModel
 	 * @param array $attributes list of attributes that need to be saved. Defaults to null,
 	 * meaning all attributes that are loaded from DB will be saved.
 	 * @return boolean whether the update is successful
-	 * @throws CException if the record is new
+	 * @throws CDbException if the record is new
 	 */
 	public function update($attributes=null)
 	{
@@ -1100,8 +1145,8 @@ abstract class CActiveRecord extends CModel
 	 * @param array $attributes attributes to be updated. Each element represents an attribute name
 	 * or an attribute value indexed by its name. If the latter, the record's
 	 * attribute will be changed accordingly before saving.
+	 * @throws CDbException if the record is new
 	 * @return boolean whether the update is successful
-	 * @throws CException if the record is new or any database error
 	 */
 	public function saveAttributes($attributes)
 	{
@@ -1164,8 +1209,8 @@ abstract class CActiveRecord extends CModel
 
 	/**
 	 * Deletes the row corresponding to this active record.
+	 * @throws CDbException if the record is new
 	 * @return boolean whether the deletion is successful.
-	 * @throws CException if the record is new
 	 */
 	public function delete()
 	{
@@ -1230,7 +1275,7 @@ abstract class CActiveRecord extends CModel
 		$table=$this->getMetaData()->tableSchema;
 		if(is_string($table->primaryKey))
 			return $this->{$table->primaryKey};
-		else if(is_array($table->primaryKey))
+		elseif(is_array($table->primaryKey))
 		{
 			$values=array();
 			foreach($table->primaryKey as $name)
@@ -1254,7 +1299,7 @@ abstract class CActiveRecord extends CModel
 		$table=$this->getMetaData()->tableSchema;
 		if(is_string($table->primaryKey))
 			$this->{$table->primaryKey}=$value;
-		else if(is_array($table->primaryKey))
+		elseif(is_array($table->primaryKey))
 		{
 			foreach($table->primaryKey as $name)
 				$this->$name=$value[$name];
@@ -1302,16 +1347,13 @@ abstract class CActiveRecord extends CModel
 		{
 			if(!$all)
 				$criteria->limit=1;
-			$command=$this->getCommandBuilder()->createFindCommand($this->getTableSchema(),$criteria);
+			$command=$this->getCommandBuilder()->createFindCommand($this->getTableSchema(),$criteria,$this->getTableAlias());
 			return $all ? $this->populateRecords($command->queryAll(), true, $criteria->index) : $this->populateRecord($command->queryRow());
 		}
 		else
 		{
-			$finder=new CActiveFinder($this,$criteria->with);
-			$result = $finder->query($criteria,$all);
-			$finder = null;
-			unset($finder);
-			return $result;
+			$finder=$this->getActiveFinder($criteria->with);
+			return $finder->query($criteria,$all);
 		}
 	}
 
@@ -1341,13 +1383,13 @@ abstract class CActiveRecord extends CModel
 						$scope=$v;
 						$params=array();
 					}
-					else if(is_array($v))
+					elseif(is_array($v))
 					{
 						$scope=key($v);
 						$params=current($v);
 					}
 				}
-				else if(is_string($k))
+				elseif(is_string($k))
 				{
 					$scope=$k;
 					$params=$v;
@@ -1419,7 +1461,7 @@ abstract class CActiveRecord extends CModel
 	 * See {@link find()} for detailed explanation about $condition and $params.
 	 * @param mixed $condition query condition or criteria.
 	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return array list of active records satisfying the specified condition. An empty array is returned if none is found.
+	 * @return CActiveRecord[] list of active records satisfying the specified condition. An empty array is returned if none is found.
 	 */
 	public function findAll($condition='',$params=array())
 	{
@@ -1450,7 +1492,7 @@ abstract class CActiveRecord extends CModel
 	 * @param mixed $pk primary key value(s). Use array for multiple primary keys. For composite key, each key value must be an array (column name=>column value).
 	 * @param mixed $condition query condition or criteria.
 	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return array the records found. An empty array is returned if none is found.
+	 * @return CActiveRecord[] the records found. An empty array is returned if none is found.
 	 */
 	public function findAllByPk($pk,$condition='',$params=array())
 	{
@@ -1484,7 +1526,7 @@ abstract class CActiveRecord extends CModel
 	 * An attribute value can be an array which will be used to generate an IN condition.
 	 * @param mixed $condition query condition or criteria.
 	 * @param array $params parameters to be bound to an SQL statement.
-	 * @return array the records found. An empty array is returned if none is found.
+	 * @return CActiveRecord[] the records found. An empty array is returned if none is found.
 	 */
 	public function findAllByAttributes($attributes,$condition='',$params=array())
 	{
@@ -1507,7 +1549,7 @@ abstract class CActiveRecord extends CModel
 		if(($criteria=$this->getDbCriteria(false))!==null && !empty($criteria->with))
 		{
 			$this->resetScope(false);
-			$finder=new CActiveFinder($this,$criteria->with);
+			$finder=$this->getActiveFinder($criteria->with);
 			return $finder->findBySql($sql,$params);
 		}
 		else
@@ -1521,7 +1563,7 @@ abstract class CActiveRecord extends CModel
 	 * Finds all active records using the specified SQL statement.
 	 * @param string $sql the SQL statement
 	 * @param array $params parameters to be bound to the SQL statement
-	 * @return array the records found. An empty array is returned if none is found.
+	 * @return CActiveRecord[] the records found. An empty array is returned if none is found.
 	 */
 	public function findAllBySql($sql,$params=array())
 	{
@@ -1530,7 +1572,7 @@ abstract class CActiveRecord extends CModel
 		if(($criteria=$this->getDbCriteria(false))!==null && !empty($criteria->with))
 		{
 			$this->resetScope(false);
-			$finder=new CActiveFinder($this,$criteria->with);
+			$finder=$this->getActiveFinder($criteria->with);
 			return $finder->findAllBySql($sql,$params);
 		}
 		else
@@ -1551,6 +1593,7 @@ abstract class CActiveRecord extends CModel
 	{
 		Yii::trace(get_class($this).'.count()','system.db.ar.CActiveRecord');
 		$builder=$this->getCommandBuilder();
+		$this->beforeCount();
 		$criteria=$builder->createCriteria($condition,$params);
 		$this->applyScopes($criteria);
 
@@ -1558,7 +1601,7 @@ abstract class CActiveRecord extends CModel
 			return $builder->createCountCommand($this->getTableSchema(),$criteria)->queryScalar();
 		else
 		{
-			$finder=new CActiveFinder($this,$criteria->with);
+			$finder=$this->getActiveFinder($criteria->with);
 			return $finder->count($criteria);
 		}
 	}
@@ -1578,6 +1621,7 @@ abstract class CActiveRecord extends CModel
 		Yii::trace(get_class($this).'.countByAttributes()','system.db.ar.CActiveRecord');
 		$prefix=$this->getTableAlias(true).'.';
 		$builder=$this->getCommandBuilder();
+		$this->beforeCount();
 		$criteria=$builder->createColumnCriteria($this->getTableSchema(),$attributes,$condition,$params,$prefix);
 		$this->applyScopes($criteria);
 
@@ -1585,7 +1629,7 @@ abstract class CActiveRecord extends CModel
 			return $builder->createCountCommand($this->getTableSchema(),$criteria)->queryScalar();
 		else
 		{
-			$finder=new CActiveFinder($this,$criteria->with);
+			$finder=$this->getActiveFinder($criteria->with);
 			return $finder->count($criteria);
 		}
 	}
@@ -1601,6 +1645,7 @@ abstract class CActiveRecord extends CModel
 	public function countBySql($sql,$params=array())
 	{
 		Yii::trace(get_class($this).'.countBySql()','system.db.ar.CActiveRecord');
+		$this->beforeCount();
 		return $this->getCommandBuilder()->createSqlCommand($sql,$params)->queryScalar();
 	}
 
@@ -1622,11 +1667,11 @@ abstract class CActiveRecord extends CModel
 		$this->applyScopes($criteria);
 
 		if(empty($criteria->with))
-			return $builder->createFindCommand($table,$criteria)->queryRow()!==false;
+			return $builder->createFindCommand($table,$criteria,$this->getTableAlias(false, false))->queryRow()!==false;
 		else
 		{
 			$criteria->select='*';
-			$finder=new CActiveFinder($this,$criteria->with);
+			$finder=$this->getActiveFinder($criteria->with);
 			return $finder->count($criteria)>0;
 		}
 	}
@@ -1700,9 +1745,7 @@ abstract class CActiveRecord extends CModel
 		$table=$this->getTableSchema();
 		$criteria=$builder->createPkCriteria($table,$pk,$condition,$params);
 		$command=$builder->createUpdateCommand($table,$attributes,$criteria);
-		$result = $command->execute();
-		$criteria = null; $command = null; $builder = null; $table = null;
-		return $result;
+		return $command->execute();
 	}
 
 	/**
@@ -1814,10 +1857,9 @@ abstract class CActiveRecord extends CModel
 			{
 				if(property_exists($record,$name))
 					$record->$name=$value;
-				else if(isset($md->columns[$name]))
+				elseif(isset($md->columns[$name]))
 					$record->_attributes[$name]=$value;
 			}
-			$md = null; $attributes = null; unset($md, $attributes);
 			$record->_pk=$record->getPrimaryKey();
 			$record->attachBehaviors($record->behaviors());
 			if($callAfterFind)
@@ -1835,7 +1877,7 @@ abstract class CActiveRecord extends CModel
 	 * @param boolean $callAfterFind whether to call {@link afterFind} after each record is populated.
 	 * @param string $index the name of the attribute whose value will be used as indexes of the query result array.
 	 * If null, it means the array will be indexed by zero-based integers.
-	 * @return array list of active records.
+	 * @return CActiveRecord[] list of active records.
 	 */
 	public function populateRecords($data,$callAfterFind=true,$index=null)
 	{
@@ -1848,8 +1890,6 @@ abstract class CActiveRecord extends CModel
 					$records[]=$record;
 				else
 					$records[$record->$index]=$record;
-				$record = null;
-				unset($record);
 			}
 		}
 		return $records;
@@ -1888,7 +1928,6 @@ abstract class CActiveRecord extends CModel
 /**
  * CBaseActiveRelation is the base class for all active relations.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  */
 class CBaseActiveRelation extends CComponent
@@ -1972,7 +2011,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->select==='*')
 				$this->select=$criteria['select'];
-			else if($criteria['select']!=='*')
+			elseif($criteria['select']!=='*')
 			{
 				$select1=is_string($this->select)?preg_split('/\s*,\s*/',trim($this->select),-1,PREG_SPLIT_NO_EMPTY):$this->select;
 				$select2=is_string($criteria['select'])?preg_split('/\s*,\s*/',trim($criteria['select']),-1,PREG_SPLIT_NO_EMPTY):$criteria['select'];
@@ -1984,7 +2023,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->condition==='')
 				$this->condition=$criteria['condition'];
-			else if($criteria['condition']!=='')
+			elseif($criteria['condition']!=='')
 				$this->condition="({$this->condition}) AND ({$criteria['condition']})";
 		}
 
@@ -1995,7 +2034,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->order==='')
 				$this->order=$criteria['order'];
-			else if($criteria['order']!=='')
+			elseif($criteria['order']!=='')
 				$this->order=$criteria['order'].', '.$this->order;
 		}
 
@@ -2003,7 +2042,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->group==='')
 				$this->group=$criteria['group'];
-			else if($criteria['group']!=='')
+			elseif($criteria['group']!=='')
 				$this->group.=', '.$criteria['group'];
 		}
 
@@ -2011,7 +2050,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->join==='')
 				$this->join=$criteria['join'];
-			else if($criteria['join']!=='')
+			elseif($criteria['join']!=='')
 				$this->join.=' '.$criteria['join'];
 		}
 
@@ -2019,7 +2058,7 @@ class CBaseActiveRelation extends CComponent
 		{
 			if($this->having==='')
 				$this->having=$criteria['having'];
-			else if($criteria['having']!=='')
+			elseif($criteria['having']!=='')
 				$this->having="({$this->having}) AND ({$criteria['having']})";
 		}
 	}
@@ -2029,7 +2068,6 @@ class CBaseActiveRelation extends CComponent
 /**
  * CStatRelation represents a statistical relational query.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  */
 class CStatRelation extends CBaseActiveRelation
@@ -2065,7 +2103,6 @@ class CStatRelation extends CBaseActiveRelation
 /**
  * CActiveRelation is the base class for representing active relations that bring back related objects.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2109,6 +2146,12 @@ class CActiveRelation extends CBaseActiveRelation
 	 * @since 1.1.9
 	 */
 	 public $scopes;
+	/**
+	 * @var string the name of the relation that should be used as the bridge to this relation.
+	 * Defaults to null, meaning don't use any bridge.
+	 * @since 1.1.7
+	 */
+	public $through;
 
 	/**
 	 * Merges this relation with a criteria specified dynamically.
@@ -2125,7 +2168,7 @@ class CActiveRelation extends CBaseActiveRelation
 			{
 				if($this->on==='')
 					$this->on=$criteria['condition'];
-				else if($criteria['condition']!=='')
+				elseif($criteria['condition']!=='')
 					$this->on="({$this->on}) AND ({$criteria['condition']})";
 			}
 			unset($criteria['condition']);
@@ -2140,7 +2183,7 @@ class CActiveRelation extends CBaseActiveRelation
 		{
 			if($this->on==='')
 				$this->on=$criteria['on'];
-			else if($criteria['on']!=='')
+			elseif($criteria['on']!=='')
 				$this->on="({$this->on}) AND ({$criteria['on']})";
 		}
 
@@ -2159,7 +2202,6 @@ class CActiveRelation extends CBaseActiveRelation
 /**
  * CBelongsToRelation represents the parameters specifying a BELONGS_TO relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2171,25 +2213,17 @@ class CBelongsToRelation extends CActiveRelation
 /**
  * CHasOneRelation represents the parameters specifying a HAS_ONE relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
 class CHasOneRelation extends CActiveRelation
 {
-	/**
-	 * @var string the name of the relation that should be used as the bridge to this relation.
-	 * Defaults to null, meaning don't use any bridge.
-	 * @since 1.1.7
-	 */
-	public $through;
 }
 
 
 /**
  * CHasManyRelation represents the parameters specifying a HAS_MANY relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2208,12 +2242,6 @@ class CHasManyRelation extends CActiveRelation
 	 * Defaults to null, meaning using zero-based integer IDs.
 	 */
 	public $index;
-	/**
-	 * @var string the name of the relation that should be used as the bridge to this relation.
-	 * Defaults to null, meaning don't use any bridge.
-	 * @since 1.1.7
-	 */
-	public $through;
 
 	/**
 	 * Merges this relation with a criteria specified dynamically.
@@ -2240,7 +2268,6 @@ class CHasManyRelation extends CActiveRelation
 /**
  * CManyManyRelation represents the parameters specifying a MANY_MANY relation.
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2297,7 +2324,6 @@ class CManyManyRelation extends CHasManyRelation
  * CActiveRecordMetaData represents the meta-data for an Active Record class.
  *
  * @author Qiang Xue <qiang.xue@gmail.com>
- * @version $Id$
  * @package system.db.ar
  * @since 1.0
  */
@@ -2320,26 +2346,27 @@ class CActiveRecordMetaData
 	 */
 	public $attributeDefaults=array();
 
-	private $_model;
+	private $_modelClassName;
 
 	/**
 	 * Constructor.
 	 * @param CActiveRecord $model the model instance
+	 * @throws CDbException if specified table for active record class cannot be found in the database
 	 */
 	public function __construct($model)
 	{
-		$this->_model=$model;
+		$this->_modelClassName=get_class($model);
 
 		$tableName=$model->tableName();
 		if(($table=$model->getDbConnection()->getSchema()->getTable($tableName))===null)
 			throw new CDbException(Yii::t('yii','The table "{table}" for active record class "{class}" cannot be found in the database.',
-				array('{class}'=>get_class($model),'{table}'=>$tableName)));
+				array('{class}'=>$this->_modelClassName,'{table}'=>$tableName)));
 		if($table->primaryKey===null)
 		{
 			$table->primaryKey=$model->primaryKey();
 			if(is_string($table->primaryKey) && isset($table->columns[$table->primaryKey]))
 				$table->columns[$table->primaryKey]->isPrimaryKey=true;
-			else if(is_array($table->primaryKey))
+			elseif(is_array($table->primaryKey))
 			{
 				foreach($table->primaryKey as $name)
 				{
@@ -2362,12 +2389,7 @@ class CActiveRecordMetaData
 			$this->addRelation($name,$config);
 		}
 	}
-	public function __destruct() {
-		foreach ($this as $key=>$value) {
-			$value = null;
-			$this->$key = null;
-		}
-	}
+
 	/**
 	 * Adds a relation.
 	 *
@@ -2377,7 +2399,7 @@ class CActiveRecordMetaData
 	 * @throws CDbException
 	 * @param string $name $name Name of the relation.
 	 * @param array $config $config Relation parameters.
-     * @return void
+	 * @return void
 	 * @since 1.1.2
 	 */
 	public function addRelation($name,$config)
@@ -2385,7 +2407,7 @@ class CActiveRecordMetaData
 		if(isset($config[0],$config[1],$config[2]))  // relation class, AR class, FK
 			$this->relations[$name]=new $config[0]($name,$config[1],$config[2],array_slice($config,3));
 		else
-			throw new CDbException(Yii::t('yii','Active record "{class}" has an invalid configuration for relation "{relation}". It must specify the relation type, the related active record class and the foreign key.', array('{class}'=>get_class($this->_model),'{relation}'=>$name)));
+			throw new CDbException(Yii::t('yii','Active record "{class}" has an invalid configuration for relation "{relation}". It must specify the relation type, the related active record class and the foreign key.', array('{class}'=>$this->_modelClassName,'{relation}'=>$name)));
 	}
 
 	/**

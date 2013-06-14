@@ -1,1 +1,2 @@
-<h2>Roles and groups</h2>
+<?php
+$this->widget('application.modules.YiiUsers.widgets.AsmSelect', array('target'=>$model));
