@@ -1,31 +1,27 @@
 <?php
 
+// uncomment the following to define a path alias
+// Yii::setPathOfAlias('local','path/to/local-folder');
 
+// This is the main Web application configuration. Any writable
+// CWebApplication properties can be configured here.
 return array(
 	'basePath'=>dirname(__FILE__).DIRECTORY_SEPARATOR.'..',
-	'name'=>'Yii Users Module demo',
-	'theme' => 'classic',
-	'preload'=>array('log','bootstrap',),
+	'name'=>'Sso Client Demo',
+
+	// preloading 'log' component
+	'preload'=>array('log', 'authManager', 'bootstrap'),
 
 	// autoloading model and component classes
 	'import'=>array(
 		'application.models.*',
 		'application.components.*',
-		'ext.set-return-url-filter.*', // required by YiiUsers module
-
+		'ext.SsoExtension.*',
+		'ext.SsoExtension.components.*',
+		'ext.SsoExtension.models.*',
 	),
 
 	'modules'=>array(
-		'YiiUsers' => array(
-			'enabledIdentities' => array(
-				'StandardIdentity',
-				'LoginzaIdentity' => array(
-						'widgetId' => '[WIDGET_ID]',
-						'apiSignature' => '[API_SIGNATURE]',
-					),
-			),
-		),
-
 		// uncomment the following to enable the Gii tool
 		/*
 		'gii'=>array(
@@ -39,22 +35,15 @@ return array(
 
 	// application components
 	'components'=>array(
+		'cache'=>array(
+			'class' => 'CFileCache',
+
+		),
 		'user'=>array(
-			
+			'class' => 'ext.SsoExtension.components.SsoUser',
 			// enable cookie-based authentication
 			'allowAutoLogin'=>true,
 		),
-		'authManager'=>array(
-            'class'=>'CDbAuthManager',
-            'connectionID'=>'db',
-        ),
-
-		'bootstrap' => array(
-		    'class' => 'ext.YiiBooster.components.Bootstrap',
-		    'responsiveCss' => true,
-		),
-
-
 		// uncomment the following to enable URLs in path-format
 		
 		'urlManager'=>array(
@@ -66,15 +55,26 @@ return array(
 			),
 		),
 		
-		
+		'authManager'=>array(
+            'class'=>'SsoAuthManager',
+            'ssoServer' => "http://yii-users-module.dev/YiiUsers/user/",
+            'privateHash' => '0800fc577294c34e0b28ad2839435945',
+            'publicHash' => '4857c94c9d3b65fc53b86ddf22a5eeff',
+        ),
+        'bootstrap' => array(
+		    'class' => 'ext.YiiBooster.components.Bootstrap',
+		    'responsiveCss' => true,
+		),
+		// uncomment the following to use a MySQL database
+		/*
 		'db'=>array(
-			'connectionString' => 'mysql:host=localhost;dbname=yiiuser',
+			'connectionString' => 'mysql:host=localhost;dbname=testdrive',
 			'emulatePrepare' => true,
 			'username' => 'root',
-			'password' => 'root',
+			'password' => '',
 			'charset' => 'utf8',
 		),
-		
+		*/
 		'errorHandler'=>array(
 			// use 'site/error' action to display errors
 			'errorAction'=>'site/error',
@@ -87,11 +87,11 @@ return array(
 					'levels'=>'error, warning',
 				),
 				// uncomment the following to show log messages on web pages
-				
-				// array(
-				// 	'class'=>'CWebLogRoute',
-				// ),
-				
+				/*
+				array(
+					'class'=>'CWebLogRoute',
+				),
+				*/
 			),
 		),
 	),

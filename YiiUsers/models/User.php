@@ -79,15 +79,15 @@ class User extends CActiveRecord {
      */
     public function validatePassword($password)
     {
-                foreach ($this->auth as $auth) {
-                        if (isset($auth->password)) {
-                
-                                if ($auth->hashPassword($password,$auth->salt)===$auth->password) {
-                                        return true;
-                                }
+        foreach ($this->auth as $auth) {
+                if (isset($auth->password)) {
+        
+                        if ($auth->hashPassword($password,$auth->salt)===$auth->password) {
+                                return true;
                         }
                 }
-            return false;
+        }
+        return false;
     }
 
 }
