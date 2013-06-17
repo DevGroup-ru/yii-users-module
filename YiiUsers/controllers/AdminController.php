@@ -180,14 +180,15 @@ class AdminController extends CController {
                         else
                                 array_push($arrSelected, $child);
                     }
-
-                    foreach ($_POST['assignmentList'] as $assigment)
-                    {
-                        if (!in_array($assigment,$arrSelected))
-                        {
-                                $authItem->addChild($assigment);
-                        }
-                    }
+                    if (isset($_POST['assignmentList'])) {
+	                    foreach ($_POST['assignmentList'] as $assigment)
+	                    {
+	                        if (!in_array($assigment,$arrSelected))
+	                        {
+	                                $authItem->addChild($assigment);
+	                        }
+	                    }
+	                }
                     Yii::app()->authManager->save();
 
 					Yii::app()->user->setFlash(
