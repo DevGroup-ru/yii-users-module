@@ -149,10 +149,12 @@ class AdminController extends CController {
 					// we are adding new
 
 					$authItem = Yii::app()->authManager->createAuthItem($form->name, $form->type, $form->description);
-					foreach ($_POST['assignmentList'] as $assigment)
-                    {
-                        $authItem->addChild($assigment);
-                    }
+					if (isset($_POST['assignmentList'])) {
+						foreach ($_POST['assignmentList'] as $assigment)
+	                    {
+	                        $authItem->addChild($assigment);
+	                    }
+	                }
 					Yii::app()->authManager->save();
 					Yii::app()->user->setFlash('success', Yii::t("YiiUsers", 'Auth item added'));
 					$this->redirect(array('/YiiUsers/Admin/Rbac'));
