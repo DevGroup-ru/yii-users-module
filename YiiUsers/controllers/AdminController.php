@@ -1,6 +1,36 @@
 <?php
 
 class AdminController extends CController {
+
+	public function filters()
+    {
+        return array(
+            'accessControl',
+        );
+    }
+
+    public function accessRules()
+    {
+        return array(
+            array('deny',
+                'actions'=>array('index', 'view', 'rbac', 'editRbac', 'deleteRbac', 'deleteRbacs'),
+                'users'=>array('*'),
+            ),
+            array('allow',
+                'actions'=>array('index', 'rbac'),
+                'roles'=>array('List SSO users'),
+            ),
+            array('allow',
+                'actions'=>array('view', 'editRbac'),
+                'roles'=>array('Edit SSO users'),
+            ),
+            array('allow',
+                'actions'=>array('deleteRbac', 'deleteRbacs'),
+                'roles'=>array('Delete SSO users'),
+            ),
+        );
+    }
+
 	public function actionIndex() {
 		$model = new User;
 		$this->render('index', array(
