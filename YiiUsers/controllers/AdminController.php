@@ -12,10 +12,6 @@ class AdminController extends CController {
     public function accessRules()
     {
         return array(
-            array('deny',
-                'actions'=>array('index', 'view', 'rbac', 'editRbac', 'deleteRbac', 'deleteRbacs'),
-                'users'=>array('*'),
-            ),
             array('allow',
                 'actions'=>array('index', 'rbac'),
                 'roles'=>array('List SSO users'),
@@ -27,6 +23,10 @@ class AdminController extends CController {
             array('allow',
                 'actions'=>array('deleteRbac', 'deleteRbacs'),
                 'roles'=>array('Delete SSO users'),
+            ),
+            array('deny',
+                'actions'=>array('index', 'view', 'rbac', 'editRbac', 'deleteRbac', 'deleteRbacs'),
+                'users'=>array('*'),
             ),
         );
     }
