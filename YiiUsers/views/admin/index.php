@@ -3,7 +3,7 @@
 <?php
 $this->widget('bootstrap.widgets.TbButtonGroup', array(
     'buttons'=>array(
-	    array('label'=>'List', 'url'=>'List'),
+	    array('label'=>'List', 'url'=>'Index'),
 	    array('label'=>'RBAC', 'url'=>'Rbac'),
 	    
     ),

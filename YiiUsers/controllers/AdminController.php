@@ -27,6 +27,58 @@ class AdminController extends CController {
 				Yii::app()->user->setFlash('success', '<strong>Well done!</strong> User profile saved.');
 			}
 		}
+		if (isset($_POST['assignmentList'])) {
+			$auth = Yii::app()->authManager;
+			$children = $auth->getAuthItems(null,intval($model->id));
+			$arrSelected = array();
+			if (isset($_POST['assignmentList'])) {
+	            foreach($children as $child)
+	            {
+	                if (!in_array($child->name,$_POST['assignmentList']))
+	                        $auth->revoke($child->name, $model->id);
+	                else
+	                        array_push($arrSelected, $child->name);
+	            }
+	            foreach ($_POST['assignmentList'] as $assigment)
+	            {
+	                if (!in_array($assigment,$arrSelected))
+	                {
+	                        $auth->assign($assigment, $model->id);
+	                }
+	            }
+	            Yii::app()->authManager->save();
+        	}
+		}
+		if (isset($_POST['UserAuth'])) {
+			foreach ($model->auth as $key=>$auth) {
+				
+				if (isset($_POST['UserAuth'][$auth->id])) {
+
+					if (array_key_exists('password', $_POST['UserAuth'][$auth->id])) {
+
+						if (empty($_POST['UserAuth'][$auth->id]['password'])) {
+							unset($_POST['UserAuth'][$auth->id]['password']);
+						} else {
+
+							$auth->salt = $auth->generateSalt();
+							$_POST['UserAuth'][$auth->id]['password'] = $auth->hashPassword($_POST['UserAuth'][$auth->id]['password'], $auth->salt
+								);
+						}
+
+					}
+					
+					$auth->attributes = $_POST['UserAuth'][$auth->id];
+					
+					$auth->userId = $model->id;
+					if ($auth->id==-1) {
+						$auth->id = null;
+					}
+					$auth->save();
+					
+				}
+			}
+			$model->getRelated('auth', true);
+		}
 
 		$this->render('view', array(
 			'model' => $model,
@@ -66,7 +118,12 @@ class AdminController extends CController {
 				if ($rbac === "") {
 					// we are adding new
 
-					Yii::app()->authManager->createAuthItem($form->name, $form->type, $form->description);
+					$authItem = Yii::app()->authManager->createAuthItem($form->name, $form->type, $form->description);
+					foreach ($_POST['assignmentList'] as $assigment)
+                    {
+                        $authItem->addChild($assigment);
+                    }
+					Yii::app()->authManager->save();
 					Yii::app()->user->setFlash('success', Yii::t("YiiUsers", 'Auth item added'));
 					$this->redirect(array('/YiiUsers/Admin/Rbac'));
 				} else {
@@ -99,7 +156,7 @@ class AdminController extends CController {
                                 $authItem->addChild($assigment);
                         }
                     }
-
+                    Yii::app()->authManager->save();
 
 					Yii::app()->user->setFlash(
 						'success', 
@@ -109,6 +166,7 @@ class AdminController extends CController {
 				}
 			}
 		}
+
 
 
 		$this->render(

@@ -2,20 +2,6 @@
 
 class UserAuth extends CActiveRecord { 
 
-
-	/**
-	 * @return array Model behaviors.
-	 */
-	public function behaviors() {
-		return array(
-				'CTimestampBehavior' => array(
-					'class'=>'zii.behaviors.CTimestampBehavior',
-					'createAttribute'=>null,
-					'updateAttribute'=>'updateTime',
-				),
-			);
-	}
-
 	/**
 	 * Returns the static model of the specified AR class.
 	 * @return Config the static model class
