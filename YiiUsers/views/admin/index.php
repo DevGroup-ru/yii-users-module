@@ -1,15 +1,24 @@
 <h1>Admin users</h1>
 
-<?php
-$this->widget('bootstrap.widgets.TbButtonGroup', array(
-    'buttons'=>array(
-	    array('label'=>'List', 'url'=>'Index'),
-	    array('label'=>'RBAC', 'url'=>'Rbac'),
-	    
-    ),
-));
+<div class="row-fluid">
+	<div class="span10">
+	<?php
+	$this->widget('bootstrap.widgets.TbButtonGroup', array(
+	    'buttons'=>array(
+		    array('label'=>'List', 'url'=>'Index'),
+		    array('label'=>'RBAC', 'url'=>'Rbac'),
+		    
+	    ),
+	));
 
-?>
+	?>
+	<br><br>
+	</div>
+	<div class="span2">
+		<?php echo CHtml::link("<i class='icon-plus-sign'></i> ".Yii::t("YiiUsers", "Add new user"), array('/YiiUsers/Admin/NewUser'), array('class'=>'btn btn-primary'));?>
+	</div>
+</div>
+<?php $this->widget('bootstrap.widgets.TbAlert'); ?>
 
 <?php
 $this->widget('bootstrap.widgets.TbExtendedGridView', array(

@@ -14,12 +14,12 @@ class SiteController extends Controller
     {
         return array(
             array('allow',
-                'actions'=>array('testAccess'),
+                'actions'=>array('check'),
                 'roles'=>array('Serpens user - guest'),
             ),
             array('deny',
-                'actions'=>array('testAccess'),
-                'roles'=>array('Serpens user - banned'),
+                'actions'=>array('check'),
+                'users'=>array('*'),
             ),
             array('deny',
                 'actions'=>array('test'),

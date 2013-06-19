@@ -17,7 +17,7 @@ class AdminController extends CController {
                 'roles'=>array('List SSO users'),
             ),
             array('allow',
-                'actions'=>array('view', 'editRbac'),
+                'actions'=>array('view', 'editRbac', 'newUser'),
                 'roles'=>array('Edit SSO users'),
             ),
             array('allow',
@@ -25,7 +25,6 @@ class AdminController extends CController {
                 'roles'=>array('Delete SSO users'),
             ),
             array('deny',
-                'actions'=>array('index', 'view', 'rbac', 'editRbac', 'deleteRbac', 'deleteRbacs'),
                 'users'=>array('*'),
             ),
         );
@@ -36,6 +35,43 @@ class AdminController extends CController {
 		$this->render('index', array(
 			'model' => $model,
 		));
+	}
+
+	public function actionNewUser() {
+		$registrationForm = new RegistrationForm();
+		if (isset($_POST['RegistrationForm'])) {
+			$registrationForm->attributes = $_POST['RegistrationForm'];
+			if (isset($_POST['ajax'])) {
+				echo CActiveForm::validate($registrationForm);
+				Yii::app()->end();
+			}
+
+			if ($registrationForm->validate()) {
+				$user = new User();
+				$user->username = $registrationForm->username;
+				
+				$user->active = 1;
+				$user->save();
+				$userProfile = new UserProfile();
+				$userProfile->email = $registrationForm->email;
+				$userProfile->userId = $user->id;
+				$userProfile->save();
+				$userAuth = new UserAuth();
+				$userAuth->identityClass = 'StandardIdentity';
+				$userAuth->userId = $user->id;
+				$userAuth->password = $registrationForm->password;
+				$userAuth->save();
+
+				
+
+				$this->raiseEvent("onAfterUserRegistered", new CEvent($this, array('user'=>&$user)));
+
+				$this->redirect(array("/YiiUsers/User/view", 'id'=>$user->id));
+			}
+		}
+		$this->render("registrationForm", array(
+			'model'=>$registrationForm,
+			));
 	}
 
 	public function actionView($id) {

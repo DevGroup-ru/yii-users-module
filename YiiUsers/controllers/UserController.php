@@ -161,6 +161,8 @@ class UserController extends CController {
 			));
 	}
 
+	
+
 	public function actionRegistration() {
 
 		$module = Yii::app()->getModule("YiiUsers");
