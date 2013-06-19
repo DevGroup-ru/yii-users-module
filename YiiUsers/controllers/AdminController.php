@@ -66,7 +66,7 @@ class AdminController extends CController {
 
 
 
-				$this->redirect(array("/YiiUsers/User/view", 'id'=>$user->id));
+				$this->redirect(array("/YiiUsers/Admin/view", 'id'=>$user->id));
 			}
 		}
 		$this->render("registrationForm", array(
