@@ -64,7 +64,7 @@ class AdminController extends CController {
 
 				
 
-				$this->raiseEvent("onAfterUserRegistered", new CEvent($this, array('user'=>&$user)));
+
 
 				$this->redirect(array("/YiiUsers/User/view", 'id'=>$user->id));
 			}
