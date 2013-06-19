@@ -10,7 +10,7 @@ $form = $this->beginWidget('bootstrap.widgets.TbActiveForm', array(
     'clientOptions' => array(
 			'validateOnSubmit'=>true,
 		),
-    'action'=>array("/YiiUsers/user/registration"),
+    
 )); ?>
 <?php echo $form->textFieldRow($model, 'username'); ?>
 <?php echo $form->passwordFieldRow($model, 'password'); ?>
