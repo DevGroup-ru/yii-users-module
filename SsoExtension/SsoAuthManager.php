@@ -13,6 +13,7 @@ class SsoAuthManager extends CAuthManager{
 		
 	}
 	private function getClient() {
+		Yii::trace("SsoAuthManager Get client");
 		if ($this->ssoServer === null || $this->privateHash === null || $this->publicHash === null) {
 			throw new CException("ssoServer and hash parameters must be set.");
 		}
@@ -23,6 +24,7 @@ class SsoAuthManager extends CAuthManager{
 	}
 
 	public function checkAccess($itemName, $userId, $params=array ( )) {
+		Yii::trace("SsoAuthManager Check access [$itemName] for user $userId");
 		return $this->getClient()->checkAccess($itemName, $userId, $params);
 	}
 

@@ -58,7 +58,8 @@ return array(
 		
 		'authManager'=>array(
             'class'=>'SsoAuthManager',
-            'ssoServer' => "http://yii-users-module.dev/YiiUsers/user/",
+            //'ssoServer' => "http://yii-users-module.dev/YiiUsers/user/",
+            'ssoServer' => "http://sso.devpulse.ru/YiiUsers/user/",
             'privateHash' => '0800fc577294c34e0b28ad2839435945',
             'publicHash' => '4857c94c9d3b65fc53b86ddf22a5eeff',
         ),

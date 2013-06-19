@@ -2,6 +2,41 @@
 
 class SiteController extends Controller
 {
+
+	public function filters()
+    {
+        return array(
+            'accessControl',
+        );
+    }
+
+    public function accessRules()
+    {
+        return array(
+            array('allow',
+                'actions'=>array('testAccess'),
+                'roles'=>array('Serpens user - guest'),
+            ),
+            array('deny',
+                'actions'=>array('testAccess'),
+                'roles'=>array('Serpens user - banned'),
+            ),
+            array('deny',
+                'actions'=>array('test'),
+                'users'=>array('*'),
+            ),
+
+        );
+    }
+
+    public function actionTest() {
+    	echo "OK";
+    }
+
+    public function actionCheck() {
+    	var_dump(Yii::app()->user->checkAccess('Serpens user - guest'));
+    }
+
 	public function actions() {
 		return array(
             'ReceiveToken'=>'ext.SsoExtension.actions.ReceiveTokenAction',
