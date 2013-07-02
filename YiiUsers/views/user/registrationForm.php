@@ -3,6 +3,7 @@
 <?php $this->widget('bootstrap.widgets.TbAlert'); ?>
 
 <?php
+$module = Yii::app()->getModule("YiiUsers");
 $form = $this->beginWidget('bootstrap.widgets.TbActiveForm', array(
     'id'=>'registrationForm',
     'type'=>'horizontal',
@@ -10,7 +11,7 @@ $form = $this->beginWidget('bootstrap.widgets.TbActiveForm', array(
     'clientOptions' => array(
 			'validateOnSubmit'=>true,
 		),
-    'action'=>array("/YiiUsers/user/registration"),
+    'action'=>$module->registrationUrl,
 )); ?>
 <?php echo $form->textFieldRow($model, 'username'); ?>
 <?php echo $form->passwordFieldRow($model, 'password'); ?>

@@ -16,6 +16,7 @@ return array(
 	),
 
 	'modules'=>array(
+		// include YiiUsers module
 		'YiiUsers' => array(
 			'enabledIdentities' => array(
 				'StandardIdentity',
@@ -24,21 +25,23 @@ return array(
 						'apiSignature' => '[API_SIGNATURE]',
 					),
 			),
+			'ssoEnabled'=>true,
+			'registrationEnabled'=>true,
 		),
-
-		// uncomment the following to enable the Gii tool
-		/*
-		'gii'=>array(
-			'class'=>'system.gii.GiiModule',
-			'password'=>'Enter Your Password Here',
-			// If removed, Gii defaults to localhost only. Edit carefully to taste.
-			'ipFilters'=>array('127.0.0.1','::1'),
-		),
-		*/
 	),
 
 	// application components
 	'components'=>array(
+		// declare cache
+		'cache' => array(
+            'class' => 'CFileCache',
+            'behaviors' => array(
+            	// requred for correct working of yii-users-module
+            		'TaggableCacheBehavior' => array(
+            				'class' => 'TaggableCacheBehavior',
+        			),
+        	),
+        ),
 		'user'=>array(
 			'class' => 'application.modules.YiiUsers.components.SsoUser',
 			// enable cookie-based authentication
@@ -74,6 +77,7 @@ return array(
 			'username' => 'root',
 			'password' => 'root',
 			'charset' => 'utf8',
+			'schemaCachingDuration'=>86400,
 		),
 		
 		'errorHandler'=>array(
@@ -95,6 +99,7 @@ return array(
 				
 			),
 		),
+		
 	),
 
 	// application-level parameters that can be accessed

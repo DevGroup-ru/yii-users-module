@@ -1,12 +1,14 @@
 <h2><?php echo Yii::t("YiiUsers", "Login as:");?></h2>
-<?php $form=$this->beginWidget('bootstrap.widgets.TbActiveForm', array(
+<?php 
+$module = Yii::app()->getModule("YiiUsers");
+$form=$this->beginWidget('bootstrap.widgets.TbActiveForm', array(
     'id'=>'loginFullForm',
     'type'=>'horizontal',
     'enableAjaxValidation'=>true,
     'clientOptions' => array(
 			'validateOnSubmit'=>true,
 		),
-    'action'=>array("/YiiUsers/user/login"),
+    'action'=>$module->loginUrl,
 ));
 
 ?>
@@ -28,7 +30,7 @@
 <div class="loginzaLoginBlock">
 	
 	<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>
-	<iframe src="http://loginza.ru/api/widget?overlay=loginza&amp;token_url=<?php echo urlencode(Yii::app()->request->getHostInfo()) . CHtml::normalizeUrl(array("/YiiUsers/user/login"));?>" 
+	<iframe src="http://loginza.ru/api/widget?overlay=loginza&amp;token_url=<?php echo urlencode(Yii::app()->request->getHostInfo()) . CHtml::normalizeUrl($module->loginUrl);?>" 
 	style="width:100%;height:100%" scrolling="no" frameborder="no">
 	</iframe>
 </div>

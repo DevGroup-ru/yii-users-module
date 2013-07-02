@@ -126,7 +126,7 @@ class LoginzaIdentity extends CUserIdentity {
 	}
 
 	public function getName() {
-		$user = Yii::app()->getModule("User")->user;
+		$user = Yii::app()->getModule("YiiUsers")->user;
 		return is_object($user) ? $user->username : "%anonymous%";
 	}
 }

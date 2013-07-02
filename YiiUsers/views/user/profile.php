@@ -6,7 +6,9 @@ if (!empty($flash)):?>
 </div>
 <?php endif; ?>
 
-<?php $form=$this->beginWidget('bootstrap.widgets.TbActiveForm', array(
+		<?php 
+		$module = Yii::app()->getModule("YiiUsers");
+		$form=$this->beginWidget('bootstrap.widgets.TbActiveForm', array(
 		        'id'=>'profileForm',
 		        'enableAjaxValidation'=>true,
 		        'clientOptions' => array(
@@ -14,7 +16,7 @@ if (!empty($flash)):?>
       			),
       			'type'=>'horizontal',
 		        'htmlOptions'=>array('class'=>'form-horizontal',),
-		        'action'=>array('/User/user/profileUpdate'),
+		        'action'=>$module->profileUpdateUrl,
 		));?>
 	
 		<?php echo $form->textFieldRow($model, "firstName"); ?>

@@ -3,6 +3,10 @@
 class UserController extends CController {
 	public function actions()
     {
+    	
+		if ($this->module->ssoEnabled == false) {
+			return array();
+		}
         return array(
             'soap'=>array(
                 'class'=>'CWebServiceAction',
@@ -18,6 +22,10 @@ class UserController extends CController {
      * @soap
      */
     public function checkAccess($itemName, $userId, $params = array()){
+    	
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
     	return Yii::app()->authManager->checkAccess($itemName, $userId, $params);
     }
 
@@ -30,6 +38,10 @@ class UserController extends CController {
      * @soap
      */
     public function getUserByToken($token, $hash, $publicHash, $time) {
+    	
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
     	$ssoClient = SsoClients::model()->cache(86400)->findByAttributes(array('publicHash'=>$publicHash));
 
     	if ($ssoClient === null) {
@@ -62,6 +74,10 @@ class UserController extends CController {
      * @soap
      */
     public function getUserById($id, $hash, $publicHash, $time) {
+    	
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
     	$ssoClient = SsoClients::model()->cache(86400)->findByAttributes(array('publicHash'=>$publicHash));
 
     	if ($ssoClient === null) {
@@ -81,6 +97,10 @@ class UserController extends CController {
     }
 
     public function actionJs($hash, $publicHash, $time) {
+    	
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
     	header("Content-Type: application/javascript");
     	// first find our record
     	$ssoClient = SsoClients::model()->cache(86400)->findByAttributes(array('publicHash'=>$publicHash));
@@ -98,6 +118,10 @@ class UserController extends CController {
     }
 
     public function actionCheckLoggedIn() {
+    	
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
     	header("Content-Type: application/javascript");
     	$logged = !Yii::app()->user->isGuest;
     	$result = array('logged'=>$logged);
@@ -137,6 +161,10 @@ class UserController extends CController {
 
 	public function actionLoginSso() {
 		
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
+
 		$model = new LoginForm();
 
 		if (Yii::app()->request->isPostRequest) {
@@ -165,8 +193,8 @@ class UserController extends CController {
 
 	public function actionRegistration() {
 
-		$module = Yii::app()->getModule("YiiUsers");
-		if ($module->registrationEnabled == false) {
+		
+		if ($this->module->registrationEnabled == false) {
 			throw new CHttpException(404);
 		}
 
@@ -229,7 +257,7 @@ class UserController extends CController {
 		}
 
 		if (is_object($this->module->user)==false){
-			$this->redirect(array("/YiiUsers/user/login"));
+			$this->redirect($this->module->loginUrl);
 		}
 
 		$model = $this->module->user->profile;

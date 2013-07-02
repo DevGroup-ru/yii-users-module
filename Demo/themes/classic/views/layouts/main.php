@@ -24,6 +24,7 @@
 						array('label'=>'Login', 'url'=>array('/YiiUsers/user/login')),
 						array('label'=>'Logout', 'url'=>array('/YiiUsers/user/logout')),
 						array('label'=>'Register', 'url'=>array('/YiiUsers/user/registration')),
+						array('label'=>'Admin', 'url'=>array('/YiiUsers/Admin/Index')),
 					)
 				)
 			)

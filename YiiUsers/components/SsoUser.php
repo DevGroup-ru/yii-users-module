@@ -3,13 +3,14 @@
 class SsoUser extends CWebUser {
 	public $_user = null;
 	public $_profile = null;
+	public $cacheLifetime = 3600;
 
 	public function getUser() {
 		if (!$this->id) {
 			return false;
 		}
 		if ($this->_user === null) {
-			$user = User::model()->with('profile')->cache(60*10)->findByPk($this->id);
+			$user = User::model()->with('profile')->cache($this->cacheLifetime,new TagDependency("User", "UserProfile"))->findByPk($this->id);
 
 			$this->_user = $user;
 			$this->_profile = $user->profile;
