@@ -136,7 +136,7 @@ Standard SQL dump for user `admin` with password `admin`:
 
 	ALTER TABLE `AuthAssignment`
 		ADD CONSTRAINT `AuthAssignment_ibfk_1` FOREIGN KEY (`itemname`) REFERENCES `AuthItem` (`name`) ON DELETE CASCADE ON UPDATE CASCADE;
-		
+
 	ALTER TABLE `AuthItemChild`
 		ADD CONSTRAINT `AuthItemChild_ibfk_1` FOREIGN KEY (`parent`) REFERENCES `AuthItem` (`name`) ON DELETE CASCADE ON UPDATE CASCADE,
 		ADD CONSTRAINT `AuthItemChild_ibfk_2` FOREIGN KEY (`child`) REFERENCES `AuthItem` (`name`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -182,6 +182,29 @@ Standard SQL dump for user `admin` with password `admin`:
 
 	INSERT INTO `UserProfile` (`id`, `userId`, `firstName`, `lastName`, `email`, `updateTime`) VALUES
 	(1, 1, '', '', 'tehdir@demispartners.ru', '2013-07-02 12:01:20');
+
+
+
+How to's
+========
+
+Most of operations(ie. isGuest) are same as in core Yii Framework.
+
+*Get username*
+
+Yii::app()->user->name
+
+*Check rights*
+
+Yii::app()->user->checkAccess()
+
+*Get user ActiveRecord instance*
+
+Yii::app()->user->getUser()
+
+*Get user profile*
+
+Yii::app()->user->getUser()->profile;
 
 
 
