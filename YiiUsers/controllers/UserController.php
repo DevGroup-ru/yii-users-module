@@ -15,6 +15,44 @@ class UserController extends CController {
     }
 
     /**
+     * @param string role
+     * @param bool profile
+     * @param string Hash
+     * @param string publicHash
+     * @param string Time
+     * @return array
+     * @soap
+     */
+    public function getUserList($role, $profile, $hash, $publicHash, $time) {
+    	
+		if ($this->module->ssoEnabled == false) {
+			throw new CHttpException(404);
+		}
+    	$ssoClient = SsoClients::model()->cache(86400)->findByAttributes(array('publicHash'=>$publicHash));
+
+    	if ($ssoClient === null) {
+    		throw new CHttpException(403);
+    	}
+
+    	$checkHash = md5($ssoClient->privateHash . ":" . $time);
+    	if ($checkHash !== $hash) {
+    		throw new CHttpException(403, "Bad hash: ".var_export($time,true));
+    	}
+
+		$selectColumns = $profile ? array('u.id id', 'u.username', 'up.firstName firstname', 'up.lastName lastname', 'up.email email') : array('u.id id', 'u.username');
+		$command = Yii::app()->db->createCommand()
+		->select($selectColumns)
+		->from('AuthAssignment a')
+		->join('User u', 'u.id = a.userId');
+		if($profile)
+			$command->join('UserProfile up', 'up.userId = u.id');
+		if(trim($role))
+			$command->where('a.itemname = :itemname', array(':itemname' => $role));
+
+    	return $command->queryAll();
+    }
+
+    /**
      * @param string item name
      * @param mixed userId
      * @param array params
