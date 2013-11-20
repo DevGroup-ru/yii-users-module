@@ -186,7 +186,7 @@ class ModelCode extends CCodeModel
 		if(!is_string($class) || !$this->classExists($class))
 			$this->addError('baseClass', "Class '{$this->baseClass}' does not exist or has syntax error.");
 		elseif($class!=='CActiveRecord' && !is_subclass_of($class,'CActiveRecord'))
-			$this->addError('baseClass', "'{$this->model}' must extend from CActiveRecord.");
+			$this->addError('baseClass', "'{$this->baseClass}' must extend from CActiveRecord.");
 	}
 
 	public function getTableSchema($tableName)
@@ -210,6 +210,7 @@ class ModelCode extends CCodeModel
 					$label=substr($label,0,-3);
 				if($label==='Id')
 					$label='ID';
+				$label=str_replace("'","\\'",$label);
 				$labels[$column->name]=$label;
 			}
 		}

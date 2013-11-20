@@ -54,6 +54,8 @@
 					ajaxUpdate: [],
 					ajaxVar: 'ajax',
 					ajaxType: 'GET',
+					csrfTokenName: null,
+					csrfToken: null,
 					pagerClass: 'pager',
 					loadingClass: 'loading',
 					filterClass: 'filters',
@@ -103,7 +105,7 @@
 
 				$(document).on('change.yiiGridView keydown.yiiGridView', settings.filterSelector, function (event) {
 					if (event.type === 'keydown') {
-						if( event.keyCode !== 13) {
+						if (event.keyCode !== 13) {
 							return; // only react to enter key
 						} else {
 							eventType = 'keydown';
@@ -129,6 +131,7 @@
 					} else {
 						$('#' + id).yiiGridView('update', {data: data});
 					}
+					return false;
 				});
 
 				if (settings.enableHistory && settings.ajaxUpdate !== false && window.History.enabled) {
@@ -314,6 +317,12 @@
 						options.data = $(settings.filterSelector).serialize();
 					}
 				}
+				if (settings.csrfTokenName && settings.csrfToken) {
+					if (typeof options.data=='string')
+						options.data+='&'+settings.csrfTokenName+'='+settings.csrfToken;
+					else
+						options.data[settings.csrfTokenName] = settings.csrfToken;
+				}
 				if(yiiXHR[id] != null){
 					yiiXHR[id].abort();
 				}
@@ -321,7 +330,9 @@
 				$grid.addClass(settings.loadingClass);
 				
 				if (settings.ajaxUpdate !== false) {
-					options.url = $.param.querystring(options.url, settings.ajaxVar + '=' + id);
+					if(settings.ajaxVar) {
+						options.url = $.param.querystring(options.url, settings.ajaxVar + '=' + id);
+					}
 					if (settings.beforeAjaxUpdate !== undefined) {
 						settings.beforeAjaxUpdate(id, options);
 					}

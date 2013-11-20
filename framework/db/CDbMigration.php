@@ -20,6 +20,9 @@
  * the database used in an application; while the {@link down} method contains "downgrading"
  * logic. The "yiic migrate" command manages all available migrations in an application.
  *
+ * By overriding {@link safeUp} or {@link safeDown} methods instead of {@link up} and {@link down}
+ * the migration logic will be wrapped with a DB transaction.
+ *
  * CDbMigration provides a set of convenient methods for manipulating database data and schema.
  * For example, the {@link insert} method can be used to easily insert a row of data into
  * a database table; the {@link createTable} method can be used to create a database table.
@@ -40,7 +43,7 @@ abstract class CDbMigration extends CComponent
 	/**
 	 * This method contains the logic to be executed when applying this migration.
 	 * Child classes may implement this method to provide actual migration logic.
-	 * @return boolean
+	 * @return boolean Returning false means, the migration will not be applied.
 	 */
 	public function up()
 	{
@@ -65,9 +68,8 @@ abstract class CDbMigration extends CComponent
 
 	/**
 	 * This method contains the logic to be executed when removing this migration.
-	 * The default implementation throws an exception indicating the migration cannot be removed.
 	 * Child classes may override this method if the corresponding migrations can be removed.
-	 * @return boolean
+	 * @return boolean Returning false means, the migration will not be applied.
 	 */
 	public function down()
 	{
@@ -96,7 +98,8 @@ abstract class CDbMigration extends CComponent
 	 * be enclosed within a DB transaction.
 	 * Child classes may implement this method instead of {@link up} if the DB logic
 	 * needs to be within a transaction.
-	 * @return boolean
+	 * @return boolean Returning false means, the migration will not be applied and
+	 * the transaction will be rolled back.
 	 * @since 1.1.7
 	 */
 	public function safeUp()
@@ -109,7 +112,8 @@ abstract class CDbMigration extends CComponent
 	 * be enclosed within a DB transaction.
 	 * Child classes may implement this method instead of {@link up} if the DB logic
 	 * needs to be within a transaction.
-	 * @return boolean
+	 * @return boolean Returning false means, the migration will not be applied and
+	 * the transaction will be rolled back.
 	 * @since 1.1.7
 	 */
 	public function safeDown()
@@ -172,6 +176,23 @@ abstract class CDbMigration extends CComponent
 		echo "    > insert into $table ...";
 		$time=microtime(true);
 		$this->getDbConnection()->createCommand()->insert($table, $columns);
+		echo " done (time: ".sprintf('%.3f', microtime(true)-$time)."s)\n";
+	}
+
+	/**
+	 * Creates and executes an INSERT SQL statement with multiple data.
+	 * The method will properly escape the column names, and bind the values to be inserted.
+	 * @param string $table the table that new rows will be inserted into.
+	 * @param array $data an array of various column data (name=>value) to be inserted into the table.
+	 * @since 1.1.15
+	 */
+	public function insertMultiple($table, $data)
+	{
+		echo "    > insert into $table ...";
+		$time=microtime(true);
+		$builder=$this->getDbConnection()->getSchema()->getCommandBuilder();
+		$command=$builder->createMultipleInsertCommand($table,$data);
+		$command->execute();
 		echo " done (time: ".sprintf('%.3f', microtime(true)-$time)."s)\n";
 	}
 
