@@ -45,6 +45,7 @@ class User extends CActiveRecord {
 		return array(
 				array('username', 'length', 'max'=>45,),
 				array('active', 'numerical', 'integerOnly'=>true,),
+				array('id, username, createTime, active', 'safe', 'on'=>'search'),
 			);
 	}
 
@@ -64,7 +65,10 @@ class User extends CActiveRecord {
     {
 
             $criteria=new CDbCriteria;
-            
+            $criteria->compare('id', $this->id);
+			$criteria->compare('username', $this->username, true);
+			$criteria->compare('createTime', $this->createTime, true);
+			$criteria->compare('active', $this->active);
             return new CActiveDataProvider($this, array(
                     'criteria'=>$criteria,
             ));

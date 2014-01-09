@@ -22,6 +22,7 @@
 
 <?php
 $this->widget('bootstrap.widgets.TbExtendedGridView', array(
+	'ajaxUrl' => array('/YiiUsers/Admin/Index'),
 	'dataProvider' => $model->search(),
 	'filter' => $model,
 	'type' => 'striped bordered condensed',

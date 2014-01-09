@@ -31,7 +31,10 @@ class AdminController extends CController {
     }
 
 	public function actionIndex() {
-		$model = new User;
+		$model = new User('search');
+		$model->unsetAttributes();
+		if(isset($_GET['User']))
+			$model->attributes=$_GET['User'];
 		$this->render('index', array(
 			'model' => $model,
 		));
